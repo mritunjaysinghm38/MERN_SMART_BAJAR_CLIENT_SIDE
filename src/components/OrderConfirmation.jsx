@@ -97,7 +97,8 @@
 
 
 
-import React from "react";
+
+import React, { useEffect, useState } from "react";
 import { useContext } from "react";
 import AppContext from "../context/AppContext";
 import "./order-confirmtion.css";
@@ -105,10 +106,31 @@ import "./order-confirmtion.css";
 const formatINR = (n) => `₹${Number(n || 0).toLocaleString("en-IN")}`;
 
 const OrderConfirmation = () => {
-  const { userOrder } = useContext(AppContext);
+  const { user_order } = useContext(AppContext);
+
+  const [userOrder, setUserOrder] = useState([]);
+  const [latestOrder, setLatestOrder] = useState([]);
+
+  useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const data = await user_order();
+        console.log("Order API response:", data);
+
+        setUserOrder(data);
+        setLatestOrder(data[0]);
+      } catch (error) {
+        console.error("Failed to fetch order:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, []);
 
   // latest order = first item (same as before)
-  const latestOrder = userOrder?.[0];
+
   const items = latestOrder?.orderItems || [];
   const ship = latestOrder?.userShipping;
 
@@ -143,7 +165,9 @@ const OrderConfirmation = () => {
       ) : (
         <div className={`oc-layout ${items.length === 1 ? "has-single" : ""}`}>
           {/* Order items */}
-          <section className={`oc-panel ${items.length === 1 ? "is-single" : ""}`}>
+          <section
+            className={`oc-panel ${items.length === 1 ? "is-single" : ""}`}
+          >
             <h2>
               Order Items
               <span className="oc-count">
